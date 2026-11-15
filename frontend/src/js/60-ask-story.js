@@ -115,12 +115,13 @@
   function injectEntries() {
     var home = byId('startRecordBtn');
     if (home && !byId('askEntryHome')) {
-      /* CTA 本身已是 position:relative；把小入口放進 CTA 內部右下角（4 點鐘方向），
-         不新增外包元素、不改變既有 flex 佈局。 */
+      /* 從 CTA 內部移出，作為獨立區塊放在「開始錄音」正下方（塊級流，不干擾既有按鈕） */
       var companion = makeEntry('askEntryHome', 'ask-entry',
         '<i class="fa-solid fa-circle-question" aria-hidden="true"></i><span data-i18n="ask.entry"></span>',
         'ask.entryAria', openSheet);
-      home.appendChild(companion);
+      var row = node('div', { class: 'ask-entry-row' });
+      row.appendChild(companion);
+      home.parentNode.insertBefore(row, home.nextSibling);
     }
 
     var tools = document.querySelector('.atlas__tools');

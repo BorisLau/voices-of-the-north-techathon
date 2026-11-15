@@ -12,11 +12,14 @@
 }
 
 /* ---------- 模組 1：子母伴生入口 ---------- */
+.ask-entry-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 22px 0;
+}
 .ask-entry {
-  position: absolute;
+  position: relative;
   z-index: 6;
-  right: 16px;
-  bottom: 12px;
   height: 36px;
   min-height: 36px;
   padding: 0 12px;
