@@ -672,7 +672,7 @@
       'privacy.demoNote': '示範故事為演示預設社區，不代表真實長者授權。',
 
       /* ---- 提問故事（Ask a Story）---- */
-      'ask.entry': '❓ 提問求古',
+      'ask.entry': '提問求古',
       'ask.entryAria': '發起提問故事',
       'ask.title': '發起提問故事',
       'ask.sub': '寫低你想問嘅事，等街坊回答',
@@ -1378,7 +1378,7 @@
       'privacy.demoNote': '示范故事为演示默认社区，不代表真实长者授权。',
 
       /* ---- 提问故事（Ask a Story）---- */
-      'ask.entry': '❓ 提问求古',
+      'ask.entry': '提问求古',
       'ask.entryAria': '发起提问故事',
       'ask.title': '发起提问故事',
       'ask.sub': '写下你想问的事，等街坊回答',
@@ -2084,7 +2084,7 @@
       'privacy.demoNote': 'Demo stories default to Community for the demo only; they do not represent real elders’ consent.',
 
       /* ---- Ask a Story ---- */
-      'ask.entry': '❓ Ask a Story',
+      'ask.entry': 'Ask a Story',
       'ask.entryAria': 'Ask a story',
       'ask.title': 'Ask a Story',
       'ask.sub': 'Write what you wonder — neighbours may know',

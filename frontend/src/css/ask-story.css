@@ -41,13 +41,7 @@
 }
 .ask-entry:hover { background: #FFEFCC; }
 .ask-entry:focus-visible { outline: 3px solid var(--ask-amber-deep); outline-offset: 2px; }
-/* 浮動只作用在圖示，按鈕熱區保持穩定（避免誤觸與自動化點擊不穩定） */
-.ask-entry i { font-size: 0.9375rem; animation: ask-bob 2.8s ease-in-out infinite; }
-
-@keyframes ask-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
+.ask-entry i { font-size: 0.9375rem; }
 
 /* 地圖工具列內的伴生小按鈕：視覺面積約主按鈕 40% */
 .atlas-btn--ask {
@@ -377,6 +371,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ask-entry, .vtn-qpin::after { animation: none !important; }
+  .vtn-qpin::after { animation: none !important; }
   .ask-sheet { transition: none; }
 }
