@@ -12,7 +12,7 @@
 ## 1. Mobile + Desktop Test Evidence
 **Done** — `scripts/evidence.mjs` captured 4 screenshots each at 390×844 and 820×900 (stories / media / recording / settings) = 8 images, plus a 30s `walkthrough.webm`; `.gitignore` ignores `evidence/` (README only committed). Reproducible via `node scripts/evidence.mjs`.
 - **proof (local paths, not in repo, see Drive)**: `evidence/{mobile,desktop}-{stories,media,recording,settings}.png` (8), `evidence/walkthrough.webm`, `evidence/task2-filter-touch-390.png`, `evidence/task4-media-overlay.png`, `evidence/task4-stories-list.png`, `evidence/README.md`
-- **Drive bundle**: `evidence-bundle.zip` (7.5 MB, at repo root) — drag to Drive in one step. **[Drive link TBD / 待补 Drive 链接]**
+- **Drive bundle**: `evidence-bundle.zip` (7.5 MB, at repo root) — drag to Drive in one step. **https://drive.google.com/file/d/1JG4VPbMi5ICwlde4557FqC3OSl6xl9Ln/view?usp=sharing**
 - **what each proves**: `*-stories` = map fills to tab bar / pins visible / no bottom white edge / UI slimmed; `*-media` = media modal inside 430px shell + footer "示範" label; `*-recording` = recording card expanded + icon picker (7 types) visible; `*-settings` = settings page OK; `task2-filter-touch-390` = 44×44 touch target (red dashed) around 34×34 visual button (green), blue search box 16px away, no overlap.
 
 ## 2. Contributor States (working vs placeholder)
@@ -73,15 +73,15 @@
 
 ## Next (non-blocking)
 1. Open the PR via web (link above); body can be pasted from this file.
-2. Upload `evidence/` to Drive (use `evidence-bundle.zip`) and backfill `evidence/README.md` `[Drive link TBD / 待补 Drive 链接]`.
+2. (Done) Uploaded `evidence-bundle.zip` to Drive and backfilled the link: https://drive.google.com/file/d/1JG4VPbMi5ICwlde4557FqC3OSl6xl9Ln/view?usp=sharing
 3. (Done) Removed redundant old branch `fix/demo-labels-and-a11y` (same content, no PR).
 
 ## Blocked
-- **None.** All 9 tasks deliverable; only PR merge needs a reviewer, and the Drive link is pending manual upload (cannot be automated from this environment).
+- **None.** All 9 tasks deliverable; only PR merge needs a reviewer. The Drive link has been provided by Steven (see Drive bundle above).
 
 ## Group message (≤3 lines)
 ```
 [Voices of the North — 11/14 wrap-up] Filter button now has an aria-label + 44×44 touch target; confidence "no data" shows "unavailable";
-demo/mock labels and the assistant button's language live-refresh are done. Mobile+desktop screenshots + 30s walkthrough are on Drive [link TBD].
+demo/mock labels and the assistant button's language live-refresh are done. Mobile+desktop screenshots + 30s walkthrough are on Drive: https://drive.google.com/file/d/1JG4VPbMi5ICwlde4557FqC3OSl6xl9Ln/view?usp=sharing.
 Code is on branch fix/demo-labels-a11y-confidence; PR pending.
 ```

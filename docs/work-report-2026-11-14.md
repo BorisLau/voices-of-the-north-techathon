@@ -18,7 +18,7 @@
   `evidence/{mobile,desktop}-{stories,media,recording,settings}.png`（8 张）、
   `evidence/walkthrough.webm`、`evidence/task2-filter-touch-390.png`、
   `evidence/task4-media-overlay.png`、`evidence/task4-stories-list.png`、`evidence/README.md`
-- **Drive 合集**：[待补 Drive 链接]
+- **Drive 合集**：https://drive.google.com/file/d/1JG4VPbMi5ICwlde4557FqC3OSl6xl9Ln/view?usp=sharing
 - **每项证明什么**：
   - `*-stories` = 地图铺满至 tab bar / pin 可见 / 无底部白边 / UI 已瘦身
   - `*-media` = 媒体弹窗在 430 外壳内 + footer「示範」标签
@@ -96,15 +96,15 @@
 
 ## Next（待办，非阻塞）
 1. 在 GitHub 网页打开 PR（链接见上），body 可整段粘贴本文件。
-2. 上传 `evidence/` 截图 + `walkthrough.webm` 至 Drive，替换 README 的 `[待补 Drive 链接]`。
+2. （已完成）上传 `evidence-bundle.zip` 至 Drive 并回填链接：https://drive.google.com/file/d/1JG4VPbMi5ICwlde4557FqC3OSl6xl9Ln/view?usp=sharing
 3. （已完成）删除冗余旧分支 `fix/demo-labels-and-a11y`（内容同新分支、未开 PR）。
 
 ## Blocked
-- **无**。全部 9 任务均可交付；仅 PR 合并需 reviewer，证据 Drive 链接待补（不阻塞代码交付）。
+- **无**。全部 9 任务均可交付；仅 PR 合并需 reviewer，证据 Drive 链接已由 Steven 提供（见上）。
 
 ## 群消息文案（≤3 行）
 ```
 【Voices of the North 11/14 收尾】filter 按钮补 aria-label + 44×44 触控热区、置信度无数据显示 unavailable、
-示例素材/Mock 标签、助手按钮语言即时刷新均已完成；双视口截图+录屏见 Drive[待补]。
+示例素材/Mock 标签、助手按钮语言即时刷新均已完成；双视口截图+录屏见 Drive：https://drive.google.com/file/d/1JG4VPbMi5ICwlde4557FqC3OSl6xl9Ln/view?usp=sharing。
 代码已推分支 fix/demo-labels-a11y-confidence，PR 待开/合并。
 ```
