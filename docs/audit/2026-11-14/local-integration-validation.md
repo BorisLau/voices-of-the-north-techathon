@@ -1,5 +1,12 @@
 # Local integration validation — 2026-11-14
 
+**Historical validation of `6debecc` and its predecessor.** The branch was
+updated on November 15 with Boris `c539cd1` and Steven `8f87b15`. The original
+approved-content replacement finding is fixed in that revision; see the
+[current combined results](../2026-11-15/combined-integration.md) for superseding
+finding status and release limits. Results below remain scoped to the older
+commits they name.
+
 ## Source and result
 
 Validated the canonical repository on `codex/local-integration-20261114`, starting at `92f34235133a2736da2d6f6b1bbb4f4813064dca`, which combines main `a6b932a`, PR #15 `a53dcc9`, and PR #14 `32b5f98`. The final English-suite run also includes the fixture compatibility correction described below. A subsequent commit may package this report and that correction without changing application behavior.
@@ -87,7 +94,7 @@ Actual responses:
 
 The backend restores the previous public scope during generic sync. These passing suites therefore do not establish that an owner's privacy change is applied to published records.
 
-## Remaining acceptance limits
+## Acceptance limits at the historical revision
 
 - Both P1 publication/privacy defects remain reproducible and need fixes with regression coverage.
 - The supplied Supabase verification exercises SQLite fallback and source/schema markers. Live PostgreSQL CRUD, RLS behavior, restart persistence, migrations against an existing database, and backup/restore remain unverified.

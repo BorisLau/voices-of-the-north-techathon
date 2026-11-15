@@ -1,6 +1,12 @@
 # PR #15 integration review — November 14, 2026
 
-The supplied suites pass, but this candidate still permits unreviewed changes to published content and can report a recording as private while it remains public. Keep these findings open through integration and staging acceptance.
+**Historical review of `a53dcc9`, superseded on November 15:** Boris's
+`c539cd1` fixes the original approved-content replacement and tested privacy
+narrowing paths, and updates reviewer loading and empty-catalog handling. The
+revised candidate is now combined with Steven's latest UI changes. See the
+[current integration results and remaining acceptance limits](../2026-11-15/combined-integration.md).
+The reproduction results below are retained as evidence for the old revision;
+they are not current failures of `c539cd1`.
 
 ## Reviewed revisions
 
@@ -84,4 +90,4 @@ PR #15 materially addresses the three earlier source incompatibilities: public r
 
 Live Supabase CRUD, RLS, restart persistence and backup/restore remain unverified. Invited Google OIDC, private object storage, real STT, and the complete browser/offline withdrawal flow also require staging acceptance. The pending integration must include PR #14's alias, regenerate the bundled frontend, and rerun its 20 English-retrieval checks alongside the relevant integration suites and new regressions.
 
-Status: two P1 lifecycle/privacy findings and the reviewer UI work remain open; staging acceptance is outstanding.
+Historical status at `a53dcc9`: two P1 lifecycle/privacy findings and the reviewer UI work were open. Current status and staging limits are in the November 15 report linked above.
