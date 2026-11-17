@@ -88,7 +88,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* 抬到底部導航之上，避免提交鍵/TBD 被導航條壓住或超出可見區 */
+  bottom: var(--vtn-nav-h, 0px);
   max-width: 560px;
   height: 82vh;
   margin: 0 auto;
