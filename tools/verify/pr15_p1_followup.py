@@ -54,6 +54,7 @@ const VTN = {
   },
   store: {
     records: {
+      get: id => id === record.id ? record : null,
       patch: (id, patch, options) => {
         if (id !== record.id) throw new Error('wrong record ID');
         state.patches.push({patch, options});
@@ -78,7 +79,7 @@ const VTN = {
 };
 const context = vm.createContext({window: {VTN}, document: {}, Blob});
 vm.runInContext(input.code, context, {filename: '65-account.js'});
-Promise.resolve(VTN.account.openWithdraw(record)).then(result => {
+Promise.resolve(VTN.account.openWithdraw(record, {kind: 'record'})).then(result => {
   process.stdout.write(JSON.stringify({result, state, record}));
 }).catch(error => {
   console.error(error);

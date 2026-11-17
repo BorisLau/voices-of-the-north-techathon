@@ -1055,7 +1055,7 @@
     withdrawBtn.innerHTML = '<i class="fa-solid fa-ban" aria-hidden="true"></i><span>' +
       U.escapeHtml(t('story.withdraw')) + '</span>';
     withdrawBtn.addEventListener('click', function () {
-      if (VTN.account) VTN.account.openWithdraw(story);
+      if (VTN.account) VTN.account.openWithdraw(story, { kind: 'story' });
     });
     actions.appendChild(withdrawBtn);
     host.appendChild(actions);

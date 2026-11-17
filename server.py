@@ -426,6 +426,15 @@ REVIEW_SENSITIVE_FIELDS = {
 }
 
 
+def _static_story_for_id(story_id: str) -> dict | None:
+    """Resolve reserved corpus identities, including alternate case spellings."""
+    identity = story_id.casefold()
+    return next(
+        (story for story in all_stories() if str(story.get("id") or "").casefold() == identity),
+        None,
+    )
+
+
 def _can_manage_record(owner: str, who: dict) -> bool:
     if who["role"] == "admin":
         return True
@@ -697,6 +706,8 @@ async def create_record(request: Request):
     rid = str(payload.get("id") or uuid.uuid4().hex)
     if not RECORD_ID_RE.match(rid):
         raise HTTPException(status_code=400, detail="無效的錄音 ID")
+    if _static_story_for_id(rid):
+        raise HTTPException(status_code=409, detail="錄音 ID 已保留給故事庫；請使用其他 ID")
 
     audio_data_url = payload.pop("audioDataURL", None)
     audio_b64 = payload.pop("audioBase64", None) or ""
@@ -1537,31 +1548,28 @@ async def withdraw_story(story_id: str, request: Request):
     conn = _connect()
     try:
         with _db_lock:
-            record_row = conn.execute(
-                "SELECT data_json, has_audio, owner, scope FROM records WHERE id=?",
-                (story_id,),
-            ).fetchone()
-            static_story = next(
-                (story for story in all_stories() if story["id"] == story_id),
-                None,
-            )
-            if not static_story and not record_row:
-                raise HTTPException(status_code=404, detail="找不到故事")
-            if record_row:
+            static_story = _static_story_for_id(story_id)
+            record_row = None
+            if static_story:
+                # A legacy recording with this ID cannot grant corpus authority.
+                if who["role"] != "admin":
+                    raise HTTPException(status_code=403, detail="只有審核者可以撤回示範故事")
+                story_id = str(static_story["id"])
+            else:
+                record_row = conn.execute(
+                    "SELECT data_json, has_audio, owner, scope FROM records WHERE id=?",
+                    (story_id,),
+                ).fetchone()
+                if not record_row:
+                    raise HTTPException(status_code=404, detail="找不到故事")
                 if not _can_manage_record(record_row[2], who):
                     raise HTTPException(status_code=403, detail="只可撤回自己的故事")
-            elif who["role"] != "admin":
-                raise HTTPException(status_code=403, detail="只有審核者可以撤回示範故事")
             existing_withdrawal = conn.execute(
                 "SELECT withdrawn_at FROM withdrawals WHERE story_id=?",
                 (story_id,),
             ).fetchone()
             if existing_withdrawal:
                 return {"ok": True, "id": story_id, "withdrawnAt": existing_withdrawal[0]}
-            record_story = (
-                _published_record_story(story_id, *record_row)
-                if record_row else None
-            )
             conn.execute(
                 "INSERT INTO withdrawals (story_id, withdrawn_at, by_user, reason) VALUES (?, ?, ?, ?) "
                 "ON CONFLICT(story_id) DO NOTHING",

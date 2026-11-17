@@ -405,7 +405,7 @@
       var correct = U.node('button', { class: 'vtn-rec-card__remove', type: 'button', text: t('story.correct') });
       correct.addEventListener('click', function () { if (VTN.account) VTN.account.openCorrection(rec); });
       var withdraw = U.node('button', { class: 'vtn-rec-card__remove', type: 'button', text: t('story.withdraw') });
-      withdraw.addEventListener('click', function () { if (VTN.account) VTN.account.openWithdraw(rec); });
+      withdraw.addEventListener('click', function () { if (VTN.account) VTN.account.openWithdraw(rec, { kind: 'record' }); });
       actions2.appendChild(correct);
       actions2.appendChild(withdraw);
       body.appendChild(actions2);

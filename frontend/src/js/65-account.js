@@ -791,8 +791,11 @@
   /* =========================================================================
    * 5. 撤回
    * ======================================================================= */
-  function openWithdraw(item) {
-    var isRecord = !isStory(item);
+  function openWithdraw(item, options) {
+    // Records may contain segments too. Use the caller's entity kind and the
+    // published story's server-provided record link, never its text shape.
+    var kind = options && options.kind;
+    var recordId = kind === 'record' ? item.id : (kind === 'story' ? item.sourceRecordId : null);
     return VTN.ui.confirm({
       titleKey: 'withdraw.title',
       messageKey: 'withdraw.message',
@@ -802,8 +805,9 @@
     }).then(function (ok) {
       if (!ok) return false;
       return VTN.api.withdraw(item.id).then(function (result) {
-        if (isRecord) {
-          VTN.store.records.patch(item.id, {
+        var localRecord = recordId && VTN.store.records.get(recordId);
+        if (localRecord) {
+          VTN.store.records.patch(recordId, {
             reviewStatus: 'withdrawn',
             scope: 'private',
             withdrawnAt: result && result.withdrawnAt || new Date().toISOString(),
@@ -821,7 +825,7 @@
           }
         }
         if (VTN.assistant) VTN.assistant.refresh();
-        if (isRecord) VTN.ui.toast(t('withdraw.keptNote'), 'info');
+        if (localRecord) VTN.ui.toast(t('withdraw.keptNote'), 'info');
         return true;
       }).catch(function () {
         // A failed server withdrawal must not hide public content locally.
