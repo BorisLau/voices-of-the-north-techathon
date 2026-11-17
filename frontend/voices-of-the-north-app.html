@@ -5148,9 +5148,9 @@ html[data-theme="dark"] .story-sheet .segment { background: rgba(255, 255, 255, 
   right: 0;
   /* 抬到底部導航之上，避免提交鍵/TBD 被導航條壓住或超出可見區 */
   bottom: var(--vtn-nav-h, 0px);
-  max-width: 560px;
+  /* 鋪滿視口寬度：真正貼合手機螢幕的底部抽屜，不再居中留灰邊 */
+  width: 100%;
   height: 82vh;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   border-radius: 20px 20px 0 0;
@@ -5173,7 +5173,8 @@ html[data-theme="dark"] .story-sheet .segment { background: rgba(255, 255, 255, 
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 8px 20px 10px;
+  /* 寬螢幕時內容維持約 560px 並置中；手機上就是 20px 邊距 */
+  padding: 8px max(20px, calc((100% - 560px) / 2)) 10px;
   border-bottom: 1px solid var(--hairline);
   flex: none;
 }
@@ -5206,7 +5207,7 @@ html[data-theme="dark"] .story-sheet .segment { background: rgba(255, 255, 255, 
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px 20px 24px;
+  padding: 16px max(20px, calc((100% - 560px) / 2)) 24px;
 }
 .ask-field { margin-bottom: 18px; }
 .ask-label {
