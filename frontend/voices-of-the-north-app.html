@@ -5070,36 +5070,53 @@ html[data-theme="dark"] .story-sheet .segment { background: rgba(255, 255, 255, 
 }
 
 /* ---------- 模組 1：子母伴生入口 ---------- */
+/* 與「開始錄音」CTA 等寬（calc(100% - 44px)）；高度取其約 1/3（CTA 約 198px → 66px）。
+   靈動島風格：深色膠囊 + 琥珀內發光 + 左側圖示圓點，靜態無浮動。 */
 .ask-entry-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin: 10px 22px 0;
 }
 .ask-entry {
   position: relative;
   z-index: 6;
-  height: 36px;
-  min-height: 36px;
-  padding: 0 12px;
+  width: 100%;
+  height: 66px;
+  min-height: 66px;
+  padding: 0 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border: 2px solid var(--ask-amber);
-  border-radius: 18px;
-  background: var(--ask-amber-light);
-  color: var(--ask-amber-deep);
-  font-size: 0.9375rem;
+  gap: 10px;
+  border: 1.5px solid rgba(217, 119, 6, 0.75);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1E3329 0%, #244535 100%);
+  color: var(--ask-amber-light);
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 6px 16px -8px rgba(180, 83, 9, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 231, 0.18),
+    inset 0 0 18px rgba(217, 119, 6, 0.22),
+    0 10px 24px -12px rgba(30, 62, 47, 0.7);
   -webkit-tap-highlight-color: transparent;
 }
-.ask-entry:hover { background: #FFEFCC; }
-.ask-entry:focus-visible { outline: 3px solid var(--ask-amber-deep); outline-offset: 2px; }
-.ask-entry i { font-size: 0.9375rem; }
+.ask-entry:hover { background: linear-gradient(135deg, #244535 0%, #2C5742 100%); }
+.ask-entry:focus-visible { outline: 3px solid var(--ask-amber); outline-offset: 2px; }
+.ask-entry i {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ask-amber-light);
+  color: var(--ask-amber-deep);
+  font-size: 1rem;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.35);
+}
 
 /* 地圖工具列內的伴生小按鈕：視覺面積約主按鈕 40% */
 .atlas-btn--ask {
