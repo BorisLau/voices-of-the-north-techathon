@@ -642,7 +642,7 @@ def _published_record_story(
         "year": payload.get("year") if isinstance(payload.get("year"), int) else None,
         "languageKey": str(payload.get("languageKey") or "yue"),
         "teller": str(payload.get("teller") or owner or "Contributor"),
-        "rolePlayed": False,
+        "rolePlayed": bool(payload.get("rolePlayed")),
         "authorized": True,
         "consentRef": str(payload.get("consentRef") or ""),
         "scope": "public",
