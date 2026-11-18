@@ -127,7 +127,7 @@
     var tools = document.querySelector('.atlas__tools');
     if (tools && !byId('askEntryMap')) {
       var mapEntry = makeEntry('askEntryMap', 'atlas-btn atlas-btn--ask',
-        '<i class="fa-solid fa-circle-question" aria-hidden="true"></i><span data-i18n="ask.entry"></span>',
+        '<i class="fa-solid fa-circle-question" aria-hidden="true"></i>',
         'ask.entryAria', openSheet);
       tools.insertBefore(mapEntry, tools.firstChild);
     }

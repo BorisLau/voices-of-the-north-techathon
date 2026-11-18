@@ -5114,13 +5114,14 @@ html[data-theme="dark"] .story-sheet .segment { background: rgba(255, 255, 255, 
   font-size: 1rem;
 }
 
-/* 地圖工具列內的伴生小按鈕：視覺面積約主按鈕 40% */
+/* 地圖工具列內的伴生小按鈕：只顯示問號圖標，尺寸與其他工具按鈕一致 */
 .atlas-btn--ask {
-  height: 36px;
-  min-height: 36px;
-  padding: 0 10px;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
   border: 2px solid var(--ask-amber);
-  border-radius: 18px;
+  border-radius: 10px;
   background: var(--ask-amber-light);
   color: var(--ask-amber-deep);
   font-size: 0.875rem;
@@ -16196,7 +16197,7 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
     var tools = document.querySelector('.atlas__tools');
     if (tools && !byId('askEntryMap')) {
       var mapEntry = makeEntry('askEntryMap', 'atlas-btn atlas-btn--ask',
-        '<i class="fa-solid fa-circle-question" aria-hidden="true"></i><span data-i18n="ask.entry"></span>',
+        '<i class="fa-solid fa-circle-question" aria-hidden="true"></i>',
         'ask.entryAria', openSheet);
       tools.insertBefore(mapEntry, tools.firstChild);
     }

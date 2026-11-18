@@ -56,13 +56,14 @@
   font-size: 1rem;
 }
 
-/* 地圖工具列內的伴生小按鈕：視覺面積約主按鈕 40% */
+/* 地圖工具列內的伴生小按鈕：只顯示問號圖標，尺寸與其他工具按鈕一致 */
 .atlas-btn--ask {
-  height: 36px;
-  min-height: 36px;
-  padding: 0 10px;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
   border: 2px solid var(--ask-amber);
-  border-radius: 18px;
+  border-radius: 10px;
   background: var(--ask-amber-light);
   color: var(--ask-amber-deep);
   font-size: 0.875rem;
