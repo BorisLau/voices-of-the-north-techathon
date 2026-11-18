@@ -430,6 +430,23 @@
     return scope;
   }
 
+  function clearScopeOverride(id) {
+    var key = String(id || '');
+    if (!key || !Object.prototype.hasOwnProperty.call(scopeOverrides, key)) return null;
+    var previous = scopeOverrides[key];
+    delete scopeOverrides[key];
+    rawSet(K.scopes, JSON.stringify(scopeOverrides));
+    var rec = getRecord(key);
+    var next = rec && VTN.SCOPES.indexOf(rec.scope) !== -1 ? rec.scope : scopePreset();
+    U.emit('vtn:scope-changed', {
+      id: key,
+      scope: next,
+      from: previous,
+      cleared: true
+    });
+    return previous;
+  }
+
   /* =========================================================================
    * 4a. 「一個預設 + 例外清單」所需的四個函式（11.08）
    * 只讀寫既有的 prefs.scope 與 K.scopes，不更動上面任何儲存邏輯。
@@ -725,6 +742,7 @@
     /* 私隱 */
     scopeOf: scopeOf,
     setScope: setScope,
+    clearScopeOverride: clearScopeOverride,
     scopePreset: scopePreset,
     setScopePreset: setScopePreset,
     scopeExceptions: scopeExceptions,

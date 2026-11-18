@@ -814,6 +814,11 @@
             sync: 'synced'
           }, { suppressSync: true });
         }
+        if (VTN.store.clearScopeOverride) {
+          var overrideIds = [item.id];
+          if (recordId && recordId !== item.id) overrideIds.push(recordId);
+          overrideIds.forEach(function (id) { VTN.store.clearScopeOverride(id); });
+        }
         VTN.store.withdrawn.add(item, '');
         VTN.ui.toast(t('withdraw.done'), 'success');
         if (VTN.recordings) VTN.recordings.renderAll();

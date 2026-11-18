@@ -81,7 +81,7 @@ function harness(options = {}) {
     config: { storageLimitChars: 3800000, consentPolicyVersion: 'SYNTHETIC',
       apiBase: 'http://synthetic.invalid' },
     util,
-    i18n: { t: key => key },
+    i18n: { t: (key, vars) => key === 'scope.label' ? key + ':' + vars.scope : key },
     ui: {
       confirm: () => Promise.resolve(options.confirm !== false),
       toast: (text, kind) => toasts.push({ text, kind })
@@ -146,6 +146,11 @@ function canonical(h, recordId) {
     && record.sync === 'synced' && record.withdrawnAt === WITHDRAWN_AT;
 }
 
+function keepOverride(h, item) {
+  h.VTN.store.setScope(item, 'public');
+  return h.VTN.store.scopeExceptions([item]).length === 1;
+}
+
 // Execute private rendering functions verbatim to check their actual event
 // callbacks. Only surrounding DOM/media helpers are doubled.
 function loadFunction(context, file, name) {
@@ -155,6 +160,19 @@ function loadFunction(context, file, name) {
   assert.ok(start >= 0 && end > start, 'Function exists: ' + name);
   return vm.runInContext('(' + text.slice(start, end + 4) + ')', context,
     { filename: file + ':' + name });
+}
+
+function renderedScopeBadge(h) {
+  Object.assign(h.context, {
+    VTN: h.VTN, U: h.VTN.util, t: h.VTN.i18n.t, audioNode: () => null,
+    openSubmission() {}, reviewSubmission() {}, exportRecord() {}, removeRecord() {}
+  });
+  const renderRecording = loadFunction(h.context, '45-recordings.js', 'renderDoneBody');
+  const card = new Element('div');
+  renderRecording(h.VTN.store.records.get(h.record.id), card, {});
+  const badge = descendants(card).find(node =>
+    String(node.textContent).startsWith('scope.label:'));
+  return badge && badge.textContent;
 }
 
 async function main() {
@@ -195,6 +213,47 @@ async function main() {
     check('published projection without local copy still succeeds', await task === true);
     check('published projection does not create a synthetic local record',
       h.patches.length === 0 && h.VTN.store.records.all().length === 0);
+  }
+  {
+    const h = harness({ segments: [{ start: 0, end: 1, text: 'Synthetic' }] });
+    check('recording override starts public', keepOverride(h, h.record));
+    const task = h.VTN.account.openWithdraw(h.record, { kind: 'record' });
+    await flush();
+    h.reply(200);
+    check('recording withdrawal succeeds with saved override', await task === true);
+    check('recording withdrawal clears only the canonical record override',
+      h.VTN.store.scopeExceptions([h.record]).length === 0
+      && h.VTN.store.scopeOf(h.VTN.store.records.get(h.record.id)) === 'private');
+    check('recording withdrawal persists the cleared override',
+      JSON.parse(h.local.get('scopes'))[h.record.id] === undefined);
+    check('recording badge renders canonical private scope',
+      renderedScopeBadge(h) === 'scope.label:scope.private', renderedScopeBadge(h));
+  }
+  {
+    const h = harness();
+    const story = {
+      id: 'PUBLISHED-OVERRIDE', sourceRecordId: h.record.id,
+      owner: 'owner@example.test', scope: 'public', segments: []
+    };
+    check('story and source record overrides start public',
+      keepOverride(h, h.record) && keepOverride(h, story));
+    const untouched = { id: 'UNTOUCHED-RECORD', scope: 'public' };
+    keepOverride(h, untouched);
+    const task = h.VTN.account.openWithdraw(story, { kind: 'story' });
+    await flush();
+    h.reply(200);
+    check('story withdrawal succeeds with saved overrides', await task === true);
+    check('story withdrawal clears its projection and source-record overrides',
+      h.VTN.store.scopeExceptions([story, h.record]).length === 0
+      && h.VTN.store.scopeOf(h.VTN.store.records.get(h.record.id)) === 'private');
+    check('story withdrawal leaves unrelated overrides intact',
+      h.VTN.store.scopeExceptions([untouched]).length === 1);
+    check('story withdrawal persists only the two cleared overrides',
+      JSON.parse(h.local.get('scopes'))[story.id] === undefined
+      && JSON.parse(h.local.get('scopes'))[h.record.id] === undefined
+      && JSON.parse(h.local.get('scopes'))[untouched.id] === 'public');
+    check('story withdrawal updates the source recording badge to private',
+      renderedScopeBadge(h) === 'scope.label:scope.private', renderedScopeBadge(h));
   }
   {
     const h = harness();
@@ -244,6 +303,36 @@ async function main() {
       && h.toasts[0].text === 'withdraw.failed' && h.toasts[0].kind === 'error');
     check(failure + ' failure does not refresh or hide content',
       Object.values(h.renders).every(value => value === 0));
+  }
+  for (const kind of ['record', 'story']) {
+    {
+      const h = harness({ segments: [] });
+      const item = kind === 'record' ? h.record :
+        { id: 'PUBLISHED-FAILURE', sourceRecordId: h.record.id, scope: 'public', segments: [] };
+      keepOverride(h, h.record);
+      if (kind === 'story') keepOverride(h, item);
+      const items = kind === 'story' ? [h.record, item] : [h.record];
+      const task = h.VTN.account.openWithdraw(item, { kind });
+      await flush();
+      h.reply(500, { detail: 'Synthetic failure' });
+      check(kind + ' failure with override returns false', await task === false);
+      check(kind + ' failure preserves saved sharing overrides',
+        h.VTN.store.scopeExceptions(items).length === (kind === 'story' ? 2 : 1)
+        && h.VTN.store.scopeOf(h.VTN.store.records.get(h.record.id)) === 'public');
+    }
+    {
+      const h = harness({ confirm: false, segments: [] });
+      const item = kind === 'record' ? h.record :
+        { id: 'PUBLISHED-CANCEL', sourceRecordId: h.record.id, scope: 'public', segments: [] };
+      keepOverride(h, h.record);
+      if (kind === 'story') keepOverride(h, item);
+      const items = kind === 'story' ? [h.record, item] : [h.record];
+      check(kind + ' cancellation with override returns false',
+        await h.VTN.account.openWithdraw(item, { kind }) === false);
+      check(kind + ' cancellation preserves saved sharing overrides',
+        h.requests.length === 0
+        && h.VTN.store.scopeExceptions(items).length === (kind === 'story' ? 2 : 1));
+    }
   }
   {
     const h = harness({ confirm: false });
