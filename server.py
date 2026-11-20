@@ -44,6 +44,7 @@ from google.cloud import speech_v1p1beta1 as speech
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from lab_api import router as lab_router
+from map_api import router as map_router
 from storage import (
     Connection,
     backend_name,
@@ -94,6 +95,7 @@ RATE_LIMITS = [
     (re.compile(r"^/api/process$"), 10),
     (re.compile(r"^/api/auth/request-code$"), 5),
     (re.compile(r"^/api/ask-village$"), 30),
+    (re.compile(r"^/api/map/geocode$"), 10),
     (re.compile(r"^/api/"), 90),
 ]
 RATE_WINDOW = 60.0
@@ -154,6 +156,7 @@ app.add_middleware(
 )
 
 app.include_router(lab_router)
+app.include_router(map_router)
 
 
 @app.get("/")
@@ -1853,11 +1856,15 @@ class StoryStaticFiles(StaticFiles):
             return await super().get_response(path, scope)
         stories = []
         for story in all_stories():
-            if not story.get("audio"):
-                continue
-            _, audio_stat = self.lookup_path(str(story["audio"]))
-            if audio_stat is not None and os.path.samestat(requested_stat, audio_stat):
-                stories.append(story)
+            # 真實故事的影片走 mediaUrl；音訊走 audio。兩者都必須受撤回檢查保護。
+            for field in ("audio", "mediaUrl"):
+                value = story.get(field)
+                if not value or "://" in str(value):
+                    continue
+                _, media_stat = self.lookup_path(str(value).lstrip("/"))
+                if media_stat is not None and os.path.samestat(requested_stat, media_stat):
+                    stories.append(story)
+                    break
         if not stories:
             return await super().get_response(path, scope)
         excluded = _withdrawn_ids()

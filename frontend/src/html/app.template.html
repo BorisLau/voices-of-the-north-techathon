@@ -223,6 +223,10 @@
               <input type="search" id="storySearch" autocomplete="off"
                      data-i18n-ph="atlas.searchPh" data-i18n-aria="stories.searchAria">
             </label>
+            <button type="button" class="atlas__filter" id="atlasLocate"
+                    data-i18n-aria="atlas.locate" data-i18n-title="atlas.locate">
+              <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+            </button>
             <button type="button" class="atlas__filter" id="filterToggle"
                     aria-expanded="false" aria-controls="filterPanel"
                     data-i18n-aria="stories.filterAria">
@@ -281,6 +285,7 @@
               <span data-i18n="atlas.privacy">位置只顯示約 800 米模糊範圍，並非講者實際位置</span>
             </p>
             <p class="atlas__tiles" id="mapTilesNote"></p>
+            <p class="atlas__tiles" id="mapHistoryNote" role="status" hidden></p>
           </div>
         </div>
       </div>
