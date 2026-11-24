@@ -6497,6 +6497,7 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
       'withdraw.note': '你自己的錄音仍會保留在「我的錄音」，可隨時匯出或刪除；此操作會留下稽核記錄。',
       'withdraw.confirm': '確認撤回',
       'withdraw.done': '已撤回，相關內容已從公開畫面移除。',
+      'withdraw.failed': '撤回未完成，故事仍可能公開；請稍後重試。',
       'withdraw.keptNote': '錄音仍保留在「我的錄音」，你可隨時匯出或刪除。',
 
       'export.title': '匯出我的音訊與逐字稿',
@@ -7192,6 +7193,7 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
       'withdraw.note': '你自己的录音仍会保留在「我的录音」，可随时导出或删除；此操作会留下审计记录。',
       'withdraw.confirm': '确认撤回',
       'withdraw.done': '已撤回，相关内容已从公开画面移除。',
+      'withdraw.failed': '撤回未完成，故事仍可能公开；请稍后重试。',
       'withdraw.keptNote': '录音仍保留在「我的录音」，你可随时导出或删除。',
 
       'export.title': '导出我的音频与逐字稿',
@@ -7887,6 +7889,7 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
       'withdraw.note': 'Your own recording stays in “My recordings” so you can still export or delete it. An audit entry is kept.',
       'withdraw.confirm': 'Withdraw',
       'withdraw.done': 'Withdrawn. The story is no longer publicly visible.',
+      'withdraw.failed': 'Withdrawal did not complete and the story may still be public. Please retry.',
       'withdraw.keptNote': 'The recording remains in “My recordings” — export or delete it anytime.',
 
       'export.title': 'Export my audio & transcript',
@@ -8632,6 +8635,23 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
     return scope;
   }
 
+  function clearScopeOverride(id) {
+    var key = String(id || '');
+    if (!key || !Object.prototype.hasOwnProperty.call(scopeOverrides, key)) return null;
+    var previous = scopeOverrides[key];
+    delete scopeOverrides[key];
+    rawSet(K.scopes, JSON.stringify(scopeOverrides));
+    var rec = getRecord(key);
+    var next = rec && VTN.SCOPES.indexOf(rec.scope) !== -1 ? rec.scope : scopePreset();
+    U.emit('vtn:scope-changed', {
+      id: key,
+      scope: next,
+      from: previous,
+      cleared: true
+    });
+    return previous;
+  }
+
   /* =========================================================================
    * 4a. 「一個預設 + 例外清單」所需的四個函式（11.08）
    * 只讀寫既有的 prefs.scope 與 K.scopes，不更動上面任何儲存邏輯。
@@ -8927,6 +8947,7 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
     /* 私隱 */
     scopeOf: scopeOf,
     setScope: setScope,
+    clearScopeOverride: clearScopeOverride,
     scopePreset: scopePreset,
     setScopePreset: setScopePreset,
     scopeExceptions: scopeExceptions,
@@ -11166,7 +11187,7 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
     withdrawBtn.innerHTML = '<i class="fa-solid fa-ban" aria-hidden="true"></i><span>' +
       U.escapeHtml(t('story.withdraw')) + '</span>';
     withdrawBtn.addEventListener('click', function () {
-      if (VTN.account) VTN.account.openWithdraw(story);
+      if (VTN.account) VTN.account.openWithdraw(story, { kind: 'story' });
     });
     actions.appendChild(withdrawBtn);
     host.appendChild(actions);
@@ -15001,7 +15022,7 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
       var correct = U.node('button', { class: 'vtn-rec-card__remove', type: 'button', text: t('story.correct') });
       correct.addEventListener('click', function () { if (VTN.account) VTN.account.openCorrection(rec); });
       var withdraw = U.node('button', { class: 'vtn-rec-card__remove', type: 'button', text: t('story.withdraw') });
-      withdraw.addEventListener('click', function () { if (VTN.account) VTN.account.openWithdraw(rec); });
+      withdraw.addEventListener('click', function () { if (VTN.account) VTN.account.openWithdraw(rec, { kind: 'record' }); });
       actions2.appendChild(correct);
       actions2.appendChild(withdraw);
       body.appendChild(actions2);
@@ -16985,28 +17006,52 @@ window.VTN_WAVEFORMS = {"YL-001":[0.465,0.68,0.536,0.384,0.455,0.63,0.623,0.483,
   /* =========================================================================
    * 5. 撤回
    * ======================================================================= */
-  function openWithdraw(item) {
-    var isRecord = !isStory(item);
-    VTN.ui.confirm({
+  function openWithdraw(item, options) {
+    // Records may contain segments too. Use the caller's entity kind and the
+    // published story's server-provided record link, never its text shape.
+    var kind = options && options.kind;
+    var recordId = kind === 'record' ? item.id : (kind === 'story' ? item.sourceRecordId : null);
+    return VTN.ui.confirm({
       titleKey: 'withdraw.title',
       messageKey: 'withdraw.message',
       noteKey: 'withdraw.note',
       confirmLabelKey: 'withdraw.confirm',
       danger: true
     }).then(function (ok) {
-      if (!ok) return;
-      VTN.store.withdrawn.add(item, '');
-      VTN.api.withdraw(item.id).catch(function () { /* 示範故事未必存在於伺服器 */ });
-      VTN.ui.toast(t('withdraw.done'), 'success');
-      if (VTN.recordings) VTN.recordings.renderAll();
-      if (VTN.stories) {
-        VTN.stories.render();
-        if (VTN.router && VTN.router.current().view === 'stories') {
-          VTN.router.go('stories', {}, { replace: true });
+      if (!ok) return false;
+      return VTN.api.withdraw(item.id).then(function (result) {
+        var localRecord = recordId && VTN.store.records.get(recordId);
+        if (localRecord) {
+          VTN.store.records.patch(recordId, {
+            reviewStatus: 'withdrawn',
+            scope: 'private',
+            withdrawnAt: result && result.withdrawnAt || new Date().toISOString(),
+            sync: 'synced'
+          }, { suppressSync: true });
         }
-      }
-      if (VTN.assistant) VTN.assistant.refresh();
-      if (isRecord) VTN.ui.toast(t('withdraw.keptNote'), 'info');
+        if (VTN.store.clearScopeOverride) {
+          var overrideIds = [item.id];
+          if (recordId && recordId !== item.id) overrideIds.push(recordId);
+          overrideIds.forEach(function (id) { VTN.store.clearScopeOverride(id); });
+        }
+        VTN.store.withdrawn.add(item, '');
+        VTN.ui.toast(t('withdraw.done'), 'success');
+        if (VTN.recordings) VTN.recordings.renderAll();
+        if (VTN.stories) {
+          VTN.stories.render();
+          if (VTN.stories.refreshFromServer) VTN.stories.refreshFromServer();
+          if (VTN.router && VTN.router.current().view === 'stories') {
+            VTN.router.go('stories', {}, { replace: true });
+          }
+        }
+        if (VTN.assistant) VTN.assistant.refresh();
+        if (localRecord) VTN.ui.toast(t('withdraw.keptNote'), 'info');
+        return true;
+      }).catch(function () {
+        // A failed server withdrawal must not hide public content locally.
+        VTN.ui.toast(t('withdraw.failed'), 'error');
+        return false;
+      });
     });
   }
 

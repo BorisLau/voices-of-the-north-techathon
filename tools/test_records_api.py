@@ -77,7 +77,15 @@ def main() -> None:
         saved = r.json()
         check("回傳 audioUrl", saved["record"]["audioUrl"].endswith("/audio"))
         check("不回存 base64", "audioBase64" not in saved["record"])
-        check("檔案例項已寫入", (Path(os.environ["VTN_RECORDS_DIR"]) / "test-rec-001.webm").is_file())
+        conn = sqlite3.connect(os.environ["VTN_DB_PATH"])
+        try:
+            audio_path = conn.execute(
+                "SELECT audio_path FROM records WHERE id='test-rec-001'"
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        check("media key 不直接重用 record ID", Path(audio_path).stem != "test-rec-001")
+        check("檔案例項已寫入", Path(audio_path).is_file())
 
         print("[3] GET /api/records — 列表與重新打開")
         listing = client.get("/api/records", headers=owner).json()
@@ -135,7 +143,7 @@ def main() -> None:
         check("ok", deleted["ok"] is True, str(deleted))
         check("音訊已實體移除", deleted["audioRemoved"] is True)
         check("文字已移除", deleted["textRemoved"] is True)
-        check("檔案不存在", not (Path(os.environ["VTN_RECORDS_DIR"]) / "test-rec-001.webm").exists())
+        check("檔案不存在", not Path(audio_path).exists())
         check("單條 404", client.get("/api/records/test-rec-001").status_code == 404)
         check("音訊 404", client.get("/api/records/test-rec-001/audio").status_code == 404)
         check("列表清空", client.get("/api/records", headers=owner).json()["count"] == 0)

@@ -474,6 +474,7 @@
       'withdraw.note': '你自己的錄音仍會保留在「我的錄音」，可隨時匯出或刪除；此操作會留下稽核記錄。',
       'withdraw.confirm': '確認撤回',
       'withdraw.done': '已撤回，相關內容已從公開畫面移除。',
+      'withdraw.failed': '撤回未完成，故事仍可能公開；請稍後重試。',
       'withdraw.keptNote': '錄音仍保留在「我的錄音」，你可隨時匯出或刪除。',
 
       'export.title': '匯出我的音訊與逐字稿',
@@ -1169,6 +1170,7 @@
       'withdraw.note': '你自己的录音仍会保留在「我的录音」，可随时导出或删除；此操作会留下审计记录。',
       'withdraw.confirm': '确认撤回',
       'withdraw.done': '已撤回，相关内容已从公开画面移除。',
+      'withdraw.failed': '撤回未完成，故事仍可能公开；请稍后重试。',
       'withdraw.keptNote': '录音仍保留在「我的录音」，你可随时导出或删除。',
 
       'export.title': '导出我的音频与逐字稿',
@@ -1864,6 +1866,7 @@
       'withdraw.note': 'Your own recording stays in “My recordings” so you can still export or delete it. An audit entry is kept.',
       'withdraw.confirm': 'Withdraw',
       'withdraw.done': 'Withdrawn. The story is no longer publicly visible.',
+      'withdraw.failed': 'Withdrawal did not complete and the story may still be public. Please retry.',
       'withdraw.keptNote': 'The recording remains in “My recordings” — export or delete it anytime.',
 
       'export.title': 'Export my audio & transcript',

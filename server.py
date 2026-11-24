@@ -429,6 +429,15 @@ REVIEW_SENSITIVE_FIELDS = {
 }
 
 
+def _static_story_for_id(story_id: str) -> dict | None:
+    """Resolve reserved corpus identities, including alternate case spellings."""
+    identity = story_id.casefold()
+    return next(
+        (story for story in all_stories() if str(story.get("id") or "").casefold() == identity),
+        None,
+    )
+
+
 def _can_manage_record(owner: str, who: dict) -> bool:
     if who["role"] == "admin":
         return True
@@ -700,6 +709,8 @@ async def create_record(request: Request):
     rid = str(payload.get("id") or uuid.uuid4().hex)
     if not RECORD_ID_RE.match(rid):
         raise HTTPException(status_code=400, detail="無效的錄音 ID")
+    if _static_story_for_id(rid):
+        raise HTTPException(status_code=409, detail="錄音 ID 已保留給故事庫；請使用其他 ID")
 
     audio_data_url = payload.pop("audioDataURL", None)
     audio_b64 = payload.pop("audioBase64", None) or ""
@@ -738,6 +749,15 @@ async def create_record(request: Request):
     conn = _connect()
     try:
         with _db_lock:
+            case_conflict = conn.execute(
+                "SELECT id FROM records WHERE lower(id)=lower(?) AND id<>?",
+                (rid, rid),
+            ).fetchone()
+            if case_conflict:
+                raise HTTPException(
+                    status_code=409,
+                    detail="錄音 ID 與現有錄音衝突；ID 不可只以大小寫區分",
+                )
             existing = conn.execute(
                 "SELECT audio_path, has_audio, owner, data_json, scope, created_at "
                 "FROM records WHERE id=?",
@@ -798,32 +818,44 @@ async def create_record(request: Request):
                 clean.pop("reviewedAt", None)
                 clean.pop("reviewNote", None)
             audio_path, has_audio = "", 0
+            previous_audio_path = str(existing[0]) if existing and existing[0] else ""
+            new_audio_path = ""
             if audio_bytes:
-                audio_path = str(RECORDS_DIR / (rid + _ext_of_mime(mime)))
+                # Media filenames are independent of client-supplied record IDs.
+                # This avoids case-insensitive filesystem aliases sharing one file.
+                audio_path = str(RECORDS_DIR / (uuid.uuid4().hex + _ext_of_mime(mime)))
+                new_audio_path = audio_path
                 tmp = Path(audio_path + ".tmp")
                 tmp.write_bytes(audio_bytes)
                 tmp.replace(audio_path)
                 has_audio = 1
             elif existing and existing[0]:
                 audio_path, has_audio = existing[0], existing[1]
-            conn.execute(
-                """INSERT INTO records
-                   (id, created_at, updated_at, status, source, has_audio, audio_path, data_json, owner, scope)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                   ON CONFLICT(id) DO UPDATE SET
-                     created_at=excluded.created_at,
-                     updated_at=excluded.updated_at,
-                     status=excluded.status,
-                     source=excluded.source,
-                     has_audio=excluded.has_audio,
-                     audio_path=excluded.audio_path,
-                     data_json=excluded.data_json,
-                     owner=excluded.owner,
-                     scope=excluded.scope""",
-                (rid, created_at, updated_at, status, source, has_audio, audio_path,
-                 json.dumps(clean, ensure_ascii=False), owner, scope),
-            )
-            conn.commit()
+            try:
+                conn.execute(
+                    """INSERT INTO records
+                       (id, created_at, updated_at, status, source, has_audio, audio_path, data_json, owner, scope)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                       ON CONFLICT(id) DO UPDATE SET
+                         created_at=excluded.created_at,
+                         updated_at=excluded.updated_at,
+                         status=excluded.status,
+                         source=excluded.source,
+                         has_audio=excluded.has_audio,
+                         audio_path=excluded.audio_path,
+                         data_json=excluded.data_json,
+                         owner=excluded.owner,
+                         scope=excluded.scope""",
+                    (rid, created_at, updated_at, status, source, has_audio, audio_path,
+                     json.dumps(clean, ensure_ascii=False), owner, scope),
+                )
+                conn.commit()
+            except Exception:
+                if new_audio_path:
+                    Path(new_audio_path).unlink(missing_ok=True)
+                raise
+            if new_audio_path and previous_audio_path and new_audio_path != previous_audio_path:
+                Path(previous_audio_path).unlink(missing_ok=True)
     finally:
         conn.close()
 
@@ -1505,8 +1537,6 @@ async def review_correction(correction_id: str, request: Request):
 @app.post("/api/stories/{story_id}/withdraw")
 async def withdraw_story(story_id: str, request: Request):
     who = viewer(request)
-    if who["role"] != "admin":
-        raise HTTPException(status_code=403, detail="只有審核者可以撤回公開故事")
     if not re.match(r"^[A-Za-z0-9_-]{1,64}$", story_id):
         raise HTTPException(status_code=400, detail="無效的故事 ID")
     if not storage_ready:
@@ -1521,22 +1551,28 @@ async def withdraw_story(story_id: str, request: Request):
     conn = _connect()
     try:
         with _db_lock:
+            static_story = _static_story_for_id(story_id)
+            record_row = None
+            if static_story:
+                # A legacy recording with this ID cannot grant corpus authority.
+                if who["role"] != "admin":
+                    raise HTTPException(status_code=403, detail="只有審核者可以撤回示範故事")
+                story_id = str(static_story["id"])
+            else:
+                record_row = conn.execute(
+                    "SELECT data_json, has_audio, owner, scope FROM records WHERE id=?",
+                    (story_id,),
+                ).fetchone()
+                if not record_row:
+                    raise HTTPException(status_code=404, detail="找不到故事")
+                if not _can_manage_record(record_row[2], who):
+                    raise HTTPException(status_code=403, detail="只可撤回自己的故事")
             existing_withdrawal = conn.execute(
                 "SELECT withdrawn_at FROM withdrawals WHERE story_id=?",
                 (story_id,),
             ).fetchone()
             if existing_withdrawal:
                 return {"ok": True, "id": story_id, "withdrawnAt": existing_withdrawal[0]}
-            record_row = conn.execute(
-                "SELECT data_json, has_audio, owner, scope FROM records WHERE id=?",
-                (story_id,),
-            ).fetchone()
-            record_story = (
-                _published_record_story(story_id, *record_row)
-                if record_row else None
-            )
-            if not any(story["id"] == story_id for story in all_stories()) and not record_story:
-                raise HTTPException(status_code=404, detail="找不到故事")
             conn.execute(
                 "INSERT INTO withdrawals (story_id, withdrawn_at, by_user, reason) VALUES (?, ?, ?, ?) "
                 "ON CONFLICT(story_id) DO NOTHING",
@@ -1545,7 +1581,7 @@ async def withdraw_story(story_id: str, request: Request):
             now = conn.execute(
                 "SELECT withdrawn_at FROM withdrawals WHERE story_id=?", (story_id,)
             ).fetchone()[0]
-            if record_story:
+            if record_row:
                 payload = _json_record(record_row[0])
                 payload["reviewStatus"] = "withdrawn"
                 payload["scope"] = "private"
