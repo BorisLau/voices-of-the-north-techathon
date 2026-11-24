@@ -65,6 +65,17 @@ Demo authentication and demo administrator grants must remain disabled for any
 real staging acceptance. Do not report the local results above as deployed
 results.
 
+A read-only check of the currently reachable production URL on 2026-11-24 at
+20:22 HKT returned:
+
+- `/api/health`: HTTP 200, `story_count=14`, `storage_mode=scoped`,
+  `stt_ready=true`, `ai_status=degraded`.
+- `/api/stories`: 14 visible stories. The three `RL-001` to `RL-003` interview
+  stories from the combined candidate are not deployed.
+
+This production observation is not a staging acceptance result and does not
+verify the combined candidate.
+
 ## Next handoff
 
 Zheng/Boxuan can use `codex/today-integration-20261124` for exact-head review
